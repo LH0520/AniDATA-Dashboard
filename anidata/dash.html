@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ANIData - Dashboard Overview</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <div class="layout">
+
+        <nav class="sidebar" aria-label="Main">
+            <div class="brand">Animal Tracker</div>
+            <ul>
+                <li><a href="dash.html" class="nav-link">Dashboard Overview</a></li>
+                <li><a href="tags.html" class="nav-link">Tags &amp; Devices</a></li>
+                <li><a href="live.html" class="nav-link">Live Monitoring</a></li>
+                <li><a href="explorer.html" class="nav-link">Data Explorer</a></li>
+            </ul>
+        </nav>
+
+        <main class="main">
+
+            <!-- Testing buttons, top right -->
+            <div id="testButtons">
+                <button id="resetButton">Clear</button>
+                <button id="disconnectButton">Disconnect</button>
+            </div>
+
+            <!-- Dashboard Overview -->
+            <section id="overview">
+                <h1>Dashboard Overview</h1>
+
+                <button id="connectButton">Connect to API</button>
+                <span id="statusText">Not connected</span>
+                <p id="errorText"></p>
+
+                <p>Knots: <span id="knotCount">-</span></p>
+                <p>Tags: <span id="tagCount">-</span></p>
+                <p>Readings: <span id="readingCount">-</span></p>
+
+                <h2>Latest reading</h2>
+                <p id="latestTag">-</p>
+                <p id="latestDetails"></p>
+
+                <h2>Knots</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Knot name</th>
+                            <th>Readings</th>
+                            <th>Last reading</th>
+                        </tr>
+                    </thead>
+                    <tbody id="knotTable"></tbody>
+                </table>
+            </section>
+
+        </main>
+    </div>
+    <script src="/static/common.js"></script>
+    <script src="/static/dash.js"></script>
+</body>
+</html>

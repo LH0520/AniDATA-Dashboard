@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ANIData - Tags & Devices</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <div class="layout">
+
+        <nav class="sidebar" aria-label="Main">
+            <div class="brand">Animal Tracker</div>
+            <ul>
+                <li><a href="dash.html" class="nav-link">Dashboard Overview</a></li>
+                <li><a href="tags.html" class="nav-link">Tags &amp; Devices</a></li>
+                <li><a href="live.html" class="nav-link">Live Monitoring</a></li>
+                <li><a href="explorer.html" class="nav-link">Data Explorer</a></li>
+            </ul>
+        </nav>
+
+        <main class="main">
+
+            <!-- Testing buttons, top right -->
+            <div id="testButtons">
+                <button id="resetButton">Clear</button>
+                <button id="disconnectButton">Disconnect</button>
+            </div>
+
+            <!-- Tags & Devices -->
+            <section id="tags">
+                <h1>Tags &amp; Devices</h1>
+
+                <label for="searchBox">Search</label>
+                <input type="text" id="searchBox" placeholder="Search by MAC, tag name or knot name">
+                <p id="deviceCount"></p>
+
+                <h2>Tags</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tag name</th>
+                            <th>MAC address</th>
+                            <th>Status</th>
+                            <th>Last reading</th>
+                            <th>Ago</th>
+                            <th>RSSI</th>
+                            <th>Battery</th>
+                            <th>Seen by knot</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tagTable"></tbody>
+                </table>
+
+                <h2>Knots</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Knot name</th>
+                            <th>Status</th>
+                            <th>Readings</th>
+                            <th>Last reading</th>
+                            <th>Ago</th>
+                            <th>Last tag seen</th>
+                        </tr>
+                    </thead>
+                    <tbody id="deviceKnotTable"></tbody>
+                </table>
+            </section>
+
+        </main>
+    </div>
+    <script src="/static/common.js"></script>
+    <script src="/static/tags.js"></script>
+</body>
+</html>

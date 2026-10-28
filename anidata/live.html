@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ANIData - Live Monitoring</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <div class="layout">
+
+        <nav class="sidebar" aria-label="Main">
+            <div class="brand">Animal Tracker</div>
+            <ul>
+                <li><a href="dash.html" class="nav-link">Dashboard Overview</a></li>
+                <li><a href="tags.html" class="nav-link">Tags &amp; Devices</a></li>
+                <li><a href="live.html" class="nav-link">Live Monitoring</a></li>
+                <li><a href="explorer.html" class="nav-link">Data Explorer</a></li>
+            </ul>
+        </nav>
+
+        <main class="main">
+
+            <!-- Testing buttons, top right -->
+            <div id="testButtons">
+                <button id="resetButton">Clear</button>
+                <button id="disconnectButton">Disconnect</button>
+            </div>
+
+            <!-- Live Monitoring -->
+            <section id="live">
+                <h1>Live Monitoring</h1>
+                <p id="liveStatus"></p>
+
+                <h2>Latest reading</h2>
+                <p id="liveTag">-</p>
+                <p id="liveDetails"></p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Age</th>
+                            <th>Tag</th>
+                            <th>Knot</th>
+                            <th>RSSI</th>
+                        </tr>
+                    </thead>
+                    <tbody id="liveTable"></tbody>
+                </table>
+            </section>
+
+        </main>
+    </div>
+    <script src="/static/common.js"></script>
+    <script src="/static/live.js"></script>
+</body>
+</html>
