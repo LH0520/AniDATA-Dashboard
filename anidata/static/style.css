@@ -1,269 +1,207 @@
-/* Colours used across the whole site. Change them here to restyle everything. */
-:root {
-    color-scheme: light dark;  /* lets the browser draw date pickers and scrollbars to match */
-    --background: #f4f6f8;
-    --panel: #ffffff;
-    --text: #1f2933;
-    --muted: #5f6b76;
-    --border: #d9e2ec;
-    --stripe: #f8fafb;
-    --accent: #2f6f4f;
-    --accent-light: #e4f1ea;
-    --sidebar: #1f2d27;
-    --sidebar-text: #cfd8d3;
-    --error: #b42318;
-}
-
-/* Darker colours if the computer is set to dark mode */
-@media (prefers-color-scheme: dark) {
-    :root {
-        --background: #121815;
-        --panel: #1b2420;
-        --text: #e3e8e5;
-        --muted: #9aa8a0;
-        --border: #2f3b35;
-        --stripe: #1f2924;
-        --accent: #4f9b74;
-        --accent-light: #24362d;
-        --sidebar: #0d1210;
-        --error: #f97066;
-    }
-}
-
-* {
-    box-sizing: border-box;
-}
-
 body {
     margin: 0;
-    font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif;
-    font-size: 15px;
-    line-height: 1.5;
-    color: var(--text);
-    background: var(--background);
+    font-family: Verdana, Geneva, sans-serif;
+    font-size: 14px;
+    color: #222;
+    background: #fafaf7;
 }
 
-
-/* Sidebar on the left, page on the right */
 .layout {
     display: flex;
     min-height: 100vh;
 }
 
+/* sidebar */
 .sidebar {
-    width: 220px;
-    flex-shrink: 0;
-    background: var(--sidebar);
-    padding: 20px 0;
+    width: 200px;
+    background: #2b3a2f;
+    padding-top: 15px;
 }
 
 .brand {
-    color: #ffffff;
-    font-size: 18px;
-    font-weight: 700;
-    padding: 0 20px 16px;
+    color: #f2e8cf;
+    font-size: 17px;
+    font-weight: bold;
+    padding: 0 15px 15px;
+    border-bottom: 1px solid #45574a;
 }
 
 .sidebar ul {
     list-style: none;
-    margin: 0;
+    margin: 10px 0;
     padding: 0;
 }
 
 .nav-link {
     display: block;
-    padding: 10px 20px;
-    color: var(--sidebar-text);
+    color: #dfe6dc;
+    padding: 8px 15px;
     text-decoration: none;
+    border-left: 3px solid transparent;
 }
 
 .nav-link:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: #ffffff;
+    background: #34463a;
+    border-left-color: #d98c3f;
 }
 
 .main {
     flex: 1;
     min-width: 0;
-    padding: 24px 32px;
+    max-width: 1150px;
+    padding: 20px 30px;
 }
 
-section {
-    max-width: 1200px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 24px;
-}
-
-
-/* Testing buttons at the top right, lined up with the edge of the panel below */
-#testButtons {
-    max-width: 1200px;
-    text-align: right;
-    margin-bottom: 12px;
-}
-
-#testButtons button {
-    background: transparent;
-    color: var(--accent);
-    padding: 4px 12px;
-    margin-left: 6px;
-}
-
-
-/* Text */
 h1 {
-    margin: 0 0 16px;
-    font-size: 24px;
+    font-size: 22px;
+    margin: 0 0 15px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #d98c3f;
 }
 
 h2 {
-    margin: 28px 0 8px;
-    font-size: 17px;
+    font-size: 16px;
+    color: #2b3a2f;
+    margin: 25px 0 8px;
 }
 
-#statusText,
-#liveStatus,
-#deviceCount,
-#explorerCount,
-#exportMessage,
-#latestDetails,
-#liveDetails {
-    color: var(--muted);
-}
-
-/* The gap goes on the button, so the status text lines up properly once the button is hidden */
-#connectButton {
-    margin-right: 10px;
-}
-
-#errorText {
-    color: var(--error);
-}
-
-#latestTag,
-#liveTag {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 0;
-}
-
-#latestDetails,
-#liveDetails {
-    margin-top: 2px;
-}
-
-
-/* Buttons and inputs */
+/* buttons */
 button {
-    font: inherit;
-    padding: 7px 14px;
-    border: 1px solid var(--accent);
-    border-radius: 6px;
-    background: var(--accent);
-    color: #ffffff;
+    font-family: inherit;
+    font-size: 13px;
+    padding: 6px 12px;
+    background: #2b3a2f;
+    color: white;
+    border: none;
+    border-radius: 3px;
     cursor: pointer;
 }
 
 button:hover {
-    opacity: 0.9;
+    background: #3d5243;
 }
 
 button:disabled {
-    opacity: 0.5;
+    background: #999;
     cursor: default;
 }
 
-input[type="text"],
-input[type="date"] {
-    font: inherit;
-    color: var(--text);
-    background: var(--panel);
-    padding: 6px 8px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
+#connectButton {
+    background: #d98c3f;
+    margin-right: 10px;
+}
+
+#testButtons {
+    text-align: right;
+    margin-bottom: 10px;
+}
+
+#testButtons button {
+    background: none;
+    color: #555;
+    border: 1px solid #bbb;
+    margin-left: 5px;
+}
+
+#testButtons button:hover {
+    background: #eee;
+}
+
+/* status text */
+#statusText, #liveStatus, #deviceCount, #explorerCount, #exportMessage,
+#latestDetails, #liveDetails {
+    color: #666;
+}
+
+#errorText {
+    color: #b00020;
+}
+
+#latestTag, #liveTag {
+    font-size: 17px;
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+
+#latestDetails, #liveDetails {
+    margin-top: 0;
+}
+
+/* inputs and filters */
+input[type="text"], input[type="date"] {
+    font-family: inherit;
+    padding: 5px;
+    border: 1px solid #bbb;
+    border-radius: 3px;
 }
 
 #searchBox {
     display: block;
-    width: 100%;
-    max-width: 400px;
-    margin: 4px 0 12px;
+    width: 300px;
+    max-width: 100%;
+    margin: 4px 0 10px;
 }
 
-
-/* Explorer filters */
 fieldset {
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    margin: 0 0 12px;
-    padding: 8px 12px 12px;
+    border: 1px solid #ccc;
+    margin: 0 0 10px;
+    padding: 6px 10px 10px;
 }
 
 legend {
-    font-weight: 600;
-    padding: 0 4px;
+    font-size: 13px;
+    font-weight: bold;
 }
 
 fieldset label {
     display: inline-block;
-    margin-right: 14px;
+    margin-right: 12px;
     white-space: nowrap;
 }
 
-/* The tag list hides inside a drop-down, and scrolls if it gets long */
 summary {
     cursor: pointer;
-    color: var(--accent);
-    font-weight: 600;
+    color: #2b3a2f;
 }
 
 #tagBoxes {
-    max-height: 220px;
+    max-height: 200px;
     overflow-y: auto;
-    margin-top: 8px;
-    padding: 8px 12px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
+    margin-top: 6px;
 }
 
 #tagBoxes label {
     display: block;
 }
 
-
-/* Tables */
+/* tables */
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 8px;
-    font-size: 14px;
-}
-
-th,
-td {
-    text-align: left;
-    padding: 8px 10px;
-    border-bottom: 1px solid var(--border);
-    vertical-align: top;
+    font-size: 13px;
+    margin-top: 6px;
+    background: white;
 }
 
 th {
-    background: var(--accent-light);
-    font-weight: 600;
+    background: #2b3a2f;
+    color: white;
+    font-weight: normal;
+    text-align: left;
+    padding: 7px 8px;
     white-space: nowrap;
 }
 
-tbody tr:nth-child(even) {
-    background: var(--stripe);
+td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #e2e2dc;
 }
 
-tbody tr:hover {
-    background: var(--accent-light);
+tr:nth-child(even) td {
+    background: #f4f4ef;
 }
 
-/* The explorer table has long hex strings and ids, so it scrolls sideways instead of squashing */
+/* explorer table is wide so let it scroll */
 #explorer table {
     display: block;
     overflow-x: auto;
@@ -273,8 +211,7 @@ tbody tr:hover {
     white-space: nowrap;
 }
 
-
-/* Small screens: sidebar goes on top */
+/* phones */
 @media (max-width: 700px) {
     .layout {
         flex-direction: column;
@@ -282,14 +219,9 @@ tbody tr:hover {
 
     .sidebar {
         width: auto;
-        padding: 12px 0;
     }
 
     .main {
-        padding: 16px;
-    }
-
-    section {
-        padding: 16px;
+        padding: 15px;
     }
 }
