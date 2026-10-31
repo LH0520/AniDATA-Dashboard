@@ -43,6 +43,12 @@
                 <p id="latestTag">-</p>
                 <p id="latestDetails"></p>
 
+                <h2>Readings per hour (last 24 hours)</h2>
+                <div id="chartBox" style="position: relative; height: 250px;">
+                    <canvas id="readingsChart"></canvas>
+                </div>
+                <p id="chartMessage"></p>
+
                 <h2>Knots</h2>
                 <table>
                     <thead>
@@ -58,6 +64,8 @@
 
         </main>
     </div>
+    <!-- Chart.js draws the chart. It loads from the internet, so the page still works without it. -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="/static/common.js"></script>
     <script src="/static/dash.js"></script>
 </body>

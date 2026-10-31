@@ -64,7 +64,7 @@ async function getData() {
     }
 
     sessionStorage.setItem("savedData", JSON.stringify(data));
-    return data;
+    return addNicknames(data);
 }
 
 function getSavedData() {
@@ -72,8 +72,55 @@ function getSavedData() {
     if (text === null) {
         return null;
     }
-    return JSON.parse(text);
+    return addNicknames(JSON.parse(text));
 }
+
+
+// Nicknames are saved in this browser (localStorage), so they stay after closing it,
+// but another computer won't have them. They look like {"DC:2C:6E:16:17:B6": "Cow 12"}
+
+function getNicknames() {
+    try {
+        return JSON.parse(localStorage.getItem("nicknames")) || {};
+    } catch (error) {
+        // localStorage can be blocked (e.g. private browsing), so just carry on without nicknames
+        return {};
+    }
+}
+
+// An empty nickname removes it
+function setNickname(mac, nickname) {
+    const nicknames = getNicknames();
+    nickname = nickname.trim().slice(0, 30);
+    if (nickname === "") {
+        delete nicknames[mac];
+    } else {
+        nicknames[mac] = nickname;
+    }
+    try {
+        localStorage.setItem("nicknames", JSON.stringify(nicknames));
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+
+// Every page shows tagName, so swap the nickname in there.
+// originalName keeps the name from the API.
+function addNicknames(data) {
+    const nicknames = getNicknames();
+    for (let i = 0; i < data.readings.length; i++) {
+        const reading = data.readings[i];
+        reading.originalName = reading.tagName;
+        if (nicknames[reading.macAddress]) {
+            reading.tagName = nicknames[reading.macAddress];
+        }
+    }
+    return data;
+}
+
+// Live readings are ones from the last 5 minutes (by the API's internet time)
+const liveMinutes = 5;
 
 function onlyNewReadings(readings) {
     const connectedText = sessionStorage.getItem("connectedAt");
@@ -83,12 +130,16 @@ function onlyNewReadings(readings) {
     }
 
     const connectedAt = new Date(connectedText).getTime();
-    const latestAllowed = new Date(apiText).getTime() + 60 * 1000;
+    const apiTime = new Date(apiText).getTime();
+    // Only keep readings since Connect AND from the last 5 minutes.
+    // Without the 5 minutes, a tab left open all day would still show readings from hours ago.
+    const earliestAllowed = Math.max(connectedAt, apiTime - liveMinutes * 60 * 1000);
+    const latestAllowed = apiTime + 60 * 1000;
     const newReadings = [];
 
     for (let i = 0; i < readings.length; i++) {
         const created = new Date(readings[i].createdAt).getTime();
-        if (created >= connectedAt && created <= latestAllowed) {
+        if (created >= earliestAllowed && created <= latestAllowed) {
             newReadings.push(readings[i]);
         }
     }

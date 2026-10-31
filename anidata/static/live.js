@@ -89,7 +89,7 @@ function showLive(allReadings) {
         const row = table.insertRow();
         const cell = row.insertCell();
         cell.colSpan = 5;
-        cell.textContent = "No readings since you connected.";
+        cell.textContent = "No readings in the last " + liveMinutes + " minutes.";
         return;
     }
 

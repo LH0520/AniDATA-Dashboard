@@ -35,6 +35,19 @@
                 <input type="text" id="searchBox" placeholder="Search by MAC, tag name or knot name">
                 <p id="deviceCount"></p>
 
+                <!-- Nicknames are saved in this browser. Leave the box empty to remove one. -->
+                <fieldset>
+                    <legend>Nickname a tag</legend>
+                    <label for="nicknameTag">Tag</label>
+                    <select id="nicknameTag"></select>
+
+                    <label for="nicknameText">Nickname</label>
+                    <input type="text" id="nicknameText" maxlength="30" placeholder="e.g. Cow 12">
+
+                    <button id="nicknameButton">Save</button>
+                    <p id="nicknameMessage"></p>
+                </fieldset>
+
                 <h2>Tags</h2>
                 <table>
                     <thead>
