@@ -84,8 +84,9 @@ def build_table(tag_names, sightings):
         })
 
     # Sort AFTER the loop has finished (newest first).
-    # "or ''" stops a missing advertisedAt from crashing the sort.
-    table.sort(key=lambda row: row["advertisedAt"] or "", reverse=True)
+    # Uses createdAt because the KNOT's clock (advertisedAt) can be wrong.
+    # "or ''" stops a missing createdAt from crashing the sort.
+    table.sort(key=lambda row: row["createdAt"] or "", reverse=True)
     return table
 
 

@@ -1,6 +1,4 @@
 const refreshTime = 15;
-// A tag or knot counts as Active if it was heard from in the last 5 minutes
-const activeMinutes = 5;
 
 const deviceCount = document.getElementById("deviceCount");
 const searchBox = document.getElementById("searchBox");
@@ -56,44 +54,16 @@ async function loadTags() {
 }
 
 
-// How many seconds ago a reading was saved, using the API's internet time.
-// createdAt and apiTime are both UTC, so this doesn't depend on this computer's clock.
-function secondsAgo(reading) {
-    const now = new Date(sessionStorage.getItem("apiTime")).getTime();
-    const created = new Date(reading.createdAt).getTime();
-    if (isNaN(now) || isNaN(created)) {
-        return null;
+// Adds the Status cell, coloured by the class in style.css
+function addStatusCell(row, seconds) {
+    const cell = row.insertCell();
+    const status = tagStatus(seconds);
+    cell.textContent = status;
+    if (status === "Active") {
+        cell.className = "statusActive";
+    } else if (status === "Missing") {
+        cell.className = "statusMissing";
     }
-    // A reading from the "future" (bad data) counts as just now
-    return Math.max(0, Math.round((now - created) / 1000));
-}
-
-function agoText(seconds) {
-    if (seconds === null) {
-        return "-";
-    }
-    if (seconds < 60) {
-        return seconds + " sec ago";
-    }
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) {
-        return minutes + " min ago";
-    }
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) {
-        return hours + " h ago";
-    }
-    return Math.floor(hours / 24) + " d ago";
-}
-
-function statusText(seconds) {
-    if (seconds === null) {
-        return "-";
-    }
-    if (seconds <= activeMinutes * 60) {
-        return "Active";
-    }
-    return "Missing";
 }
 
 // True if the search box is empty, or any of the texts contain what was typed
@@ -159,11 +129,16 @@ function showTags(readings) {
         const row = tagTable.insertRow();
         row.insertCell().textContent = show(latest.tagName);
         row.insertCell().textContent = macs[i];
-        row.insertCell().textContent = statusText(seconds);
+        addStatusCell(row, seconds);
         row.insertCell().textContent = shortTime(latest.advertisedAt);
         row.insertCell().textContent = agoText(seconds);
         row.insertCell().textContent = show(latest.rssi);
-        row.insertCell().textContent = battery(latest.advertisement);
+        const batteryCell = row.insertCell();
+        batteryCell.textContent = battery(latest.advertisement);
+        // parseInt("87%") is 87. "-" gives NaN, which is never under the limit.
+        if (parseInt(batteryCell.textContent) < lowBattery) {
+            batteryCell.className = "statusMissing";
+        }
         row.insertCell().textContent = show(latest.knotName);
     }
     if (tagTable.rows.length === 0) {
@@ -182,7 +157,7 @@ function showTags(readings) {
         const seconds = secondsAgo(knot.latest);
         const row = knotTable.insertRow();
         row.insertCell().textContent = knotNames[i];
-        row.insertCell().textContent = statusText(seconds);
+        addStatusCell(row, seconds);
         row.insertCell().textContent = knot.readings;
         row.insertCell().textContent = shortTime(knot.latest.advertisedAt);
         row.insertCell().textContent = agoText(seconds);

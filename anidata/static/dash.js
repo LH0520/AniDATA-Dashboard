@@ -6,6 +6,8 @@ const refreshTime = 15;
 let loading = false;
 let hasData = false;
 let timer = null;
+// Up here because the code just below can draw the chart as soon as the page loads
+let chart = null;
 
 connectButton.addEventListener("click", connect);
 
@@ -70,6 +72,7 @@ function showAPIdata(data) {
     // tags is a list of the MAC addresses seen, with no repeats.
     const knots = {};
     const tags = [];
+    let missing = 0;
 
     for (let i = 0; i < readings.length; i++) {
         const reading = readings[i];
@@ -81,14 +84,22 @@ function showAPIdata(data) {
         }
         knots[name].readings += 1;
 
-        if (!tags.includes(reading.macAddress)) {
+        // Skip junk readings with no MAC address, the same as the Tags page.
+        // The first reading for each tag is its newest, so that one decides if it's missing.
+        if (reading.macAddress && !tags.includes(reading.macAddress)) {
             tags.push(reading.macAddress);
+            if (tagStatus(secondsAgo(reading)) === "Missing") {
+                missing += 1;
+            }
         }
     }
 
     const knotNames = Object.keys(knots).sort();
     document.getElementById("knotCount").textContent = knotNames.length;
     document.getElementById("tagCount").textContent = tags.length;
+    const missingCount = document.getElementById("missingCount");
+    missingCount.textContent = missing;
+    missingCount.className = missing > 0 ? "statusMissing" : "";
     document.getElementById("readingCount").textContent = readings.length;
 
     showLatest(readings);
@@ -143,8 +154,6 @@ function showLatest(readings) {
 
 // Chart
 
-let chart = null;
-
 // Counts the readings in each of the last 24 hours (Perth time) and draws a bar chart.
 // It uses createdAt (UTC) and the API's time, so it doesn't depend on this computer's clock.
 function showChart(readings) {
@@ -189,7 +198,8 @@ function showChart(readings) {
         values.push(counts[hours[i]]);
         total += counts[hours[i]];
     }
-    chartMessage.textContent = total + " readings in the last 24 hours";
+    chartMessage.textContent = "Last 24 hours: " + total + " of the " + readings.length +
+        " readings the API returned. Older readings aren't available.";
 
     // Make the chart the first time, after that just swap in the new numbers
     if (chart === null) {
@@ -197,7 +207,7 @@ function showChart(readings) {
             type: "bar",
             data: {
                 labels: labels,
-                datasets: [{ label: "Readings", data: values, backgroundColor: "#2b3a2f" }],
+                datasets: [{ label: "Readings", data: values, backgroundColor: "#2f6f5e" }],
             },
             options: {
                 maintainAspectRatio: false,

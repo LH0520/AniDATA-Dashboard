@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>ANIData - Dashboard Overview</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
@@ -10,12 +11,12 @@
     <div class="layout">
 
         <nav class="sidebar" aria-label="Main">
-            <div class="brand">Animal Tracker</div>
+            <div class="brand">AniDATA</div>
             <ul>
-                <li><a href="dash.html" class="nav-link">Dashboard Overview</a></li>
-                <li><a href="tags.html" class="nav-link">Tags &amp; Devices</a></li>
-                <li><a href="live.html" class="nav-link">Live Monitoring</a></li>
-                <li><a href="explorer.html" class="nav-link">Data Explorer</a></li>
+                <li><a href="dash.html" class="nav-link">Overview</a></li>
+                <li><a href="tags.html" class="nav-link">Tags</a></li>
+                <li><a href="live.html" class="nav-link">Live</a></li>
+                <li><a href="explorer.html" class="nav-link">Explorer</a></li>
             </ul>
         </nav>
 
@@ -23,7 +24,6 @@
 
             <!-- Testing buttons, top right -->
             <div id="testButtons">
-                <button id="resetButton">Clear</button>
                 <button id="disconnectButton">Disconnect</button>
             </div>
 
@@ -37,13 +37,14 @@
 
                 <p>Knots: <span id="knotCount">-</span></p>
                 <p>Tags: <span id="tagCount">-</span></p>
+                <p>Missing tags: <span id="missingCount">-</span></p>
                 <p>Readings: <span id="readingCount">-</span></p>
 
                 <h2>Latest reading</h2>
                 <p id="latestTag">-</p>
                 <p id="latestDetails"></p>
 
-                <h2>Readings per hour (last 24 hours)</h2>
+                <h2>Readings per hour (from the latest 50 items)</h2>
                 <div id="chartBox" style="position: relative; height: 250px;">
                     <canvas id="readingsChart"></canvas>
                 </div>

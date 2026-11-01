@@ -1,43 +1,66 @@
-const refreshTime = 5;
+const refreshTime = 1;
 const rowsToShow = 20;
+// Each tag keeps the same dot colour
+const dotColours = ["#c93d8a", "#2f6fdb", "#12877a", "#e0861a", "#7a4fc4", "#b5522b"];
 
 const liveStatus = document.getElementById("liveStatus");
+const connectionPill = document.getElementById("connectionPill");
 
 let loading = false;
 let hasData = false;
+let paused = false;
+
+const pauseButton = document.getElementById("pauseButton");
+pauseButton.addEventListener("click", togglePause);
 
 // Only load anything once the user has pressed Connect on the overview page
 if (isConnected()) {
+    pauseButton.hidden = false;
+    connectionPill.hidden = false;
+    setStatus("Loading...", "Connecting");
     const saved = getSavedData();
     if (saved !== null) {
         showLive(saved.readings);
         hasData = true;
-        liveStatus.textContent = "Updates every " + refreshTime + " seconds. Loading...";
     }
     loadLive();
     setInterval(loadLive, refreshTime * 1000);
 } else {
-    liveStatus.textContent = "Not connected. Press Connect on the Dashboard Overview page first.";
+    liveStatus.textContent = "Not connected. Press Connect on the Overview page first.";
+}
+
+
+// The pill only goes green, and the dot only shows, when it really is connected
+function setStatus(text, pillText) {
+    const connected = pillText === "Connected";
+    liveStatus.textContent = text;
+    liveStatus.className = connected ? "connected" : "";
+    connectionPill.textContent = pillText;
+    connectionPill.className = connected ? "" : "pillOff";
 }
 
 
 async function loadLive() {
-    if (loading) {
+    if (loading || paused) {
         return;
     }
     loading = true;
 
     try {
         const data = await getData();
-        showLive(data.readings);
-        hasData = true;
-        liveStatus.textContent = "Updates every " + refreshTime + " seconds. Last updated " +
-            new Date().toLocaleTimeString("en-AU");
+        // Pause might have been pressed while this was loading
+        if (!paused) {
+            showLive(data.readings);
+            hasData = true;
+            setStatus("Connected, updating every second", "Connected");
+        }
     } catch (error) {
-        if (hasData) {
-            liveStatus.textContent = "Could not refresh - showing older data. " + error.message;
+        if (paused) {
+            // Stay on "Paused". The next refresh after Resume will show any problem.
+        } else if (hasData) {
+            setStatus("Could not refresh - showing older data. " + error.message, "Connection lost");
         } else {
-            liveStatus.textContent = "Could not load data. " + error.message;
+            setStatus("Could not load data. " + error.message, "Connection lost");
         }
     }
 
@@ -45,33 +68,16 @@ async function loadLive() {
 }
 
 
-// How long ago a reading was seen.
-// advertisedAt has no timezone so this assumes it is Perth time (+08:00)
-function timeAgo(text) {
-    if (!text) {
-        return "-";
+// Pause stops the table changing so you can read it. Resume loads straight away.
+function togglePause() {
+    paused = !paused;
+    if (paused) {
+        pauseButton.textContent = "Resume";
+        setStatus("Paused", "Paused");
+    } else {
+        pauseButton.textContent = "Pause";
+        loadLive();
     }
-    const date = new Date(text + "+08:00");
-    if (isNaN(date.getTime())) {
-        return "-";
-    }
-
-    let seconds = Math.round((new Date() - date) / 1000);
-    if (seconds < 0) {
-        seconds = 0;
-    }
-    if (seconds < 60) {
-        return seconds + " sec ago";
-    }
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) {
-        return minutes + " min ago";
-    }
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) {
-        return hours + " h ago";
-    }
-    return Math.floor(hours / 24) + " d ago";
 }
 
 
@@ -83,9 +89,6 @@ function showLive(allReadings) {
     table.textContent = "";
 
     if (readings.length === 0) {
-        document.getElementById("liveTag").textContent = "No new readings yet";
-        document.getElementById("liveDetails").textContent = "";
-
         const row = table.insertRow();
         const cell = row.insertCell();
         cell.colSpan = 5;
@@ -93,19 +96,83 @@ function showLive(allReadings) {
         return;
     }
 
-    // the readings are newest first, so the first one is the latest
-    const latest = readings[0];
-    document.getElementById("liveTag").textContent = show(latest.tagName);
-    document.getElementById("liveDetails").textContent =
-        "RSSI " + show(latest.rssi) + " | " + show(latest.knotName) + " | " + shortTime(latest.advertisedAt);
-
     for (let i = 0; i < readings.length && i < rowsToShow; i++) {
         const reading = readings[i];
         const row = table.insertRow();
-        row.insertCell().textContent = shortTime(reading.advertisedAt);
-        row.insertCell().textContent = timeAgo(reading.advertisedAt);
-        row.insertCell().textContent = show(reading.tagName);
+        // the readings are newest first, so the first row is the latest
+        if (i === 0) {
+            row.className = "newest";
+        }
+
+        const timeCell = row.insertCell();
+        timeCell.className = "timeCell";
+        // "2026-10-19T18:19:04" shows as "18:19:04"
+        timeCell.textContent = show(String(reading.advertisedAt || "").slice(11, 19));
+
+        addAnimalCell(row, reading);
         row.insertCell().textContent = show(reading.knotName);
-        row.insertCell().textContent = show(reading.rssi);
+        addSignalCell(row, reading.rssi);
+
+        const batteryCell = row.insertCell();
+        batteryCell.textContent = battery(reading.advertisement);
+        batteryCell.className = "batteryCell";
+        // parseInt("87%") is 87. "-" gives NaN, which is never under the limit.
+        if (parseInt(batteryCell.textContent) < lowBattery) {
+            batteryCell.className = "batteryCell statusMissing";
+        }
     }
+}
+
+
+function addAnimalCell(row, reading) {
+    const cell = row.insertCell();
+    cell.className = "animalCell";
+
+    // Add up the letters of the MAC to pick a colour, so a nickname doesn't change it
+    const mac = String(reading.macAddress || "");
+    let total = 0;
+    for (let i = 0; i < mac.length; i++) {
+        total += mac.charCodeAt(i);
+    }
+    const dot = document.createElement("span");
+    dot.className = "animalDot";
+    dot.style.backgroundColor = dotColours[total % dotColours.length];
+
+    cell.appendChild(dot);
+    cell.appendChild(document.createTextNode(show(reading.tagName)));
+}
+
+
+// Four bars, like a phone's signal. -50 dBm is strong and -90 dBm is weak.
+function addSignalCell(row, rssi) {
+    const cell = row.insertCell();
+    cell.className = "signalCell";
+
+    const signal = parseFloat(rssi);
+    if (isNaN(signal)) {
+        cell.textContent = "-";
+        return;
+    }
+
+    let barsOn = 1;
+    if (signal >= -55) {
+        barsOn = 4;
+    } else if (signal >= -65) {
+        barsOn = 3;
+    } else if (signal >= -75) {
+        barsOn = 2;
+    }
+
+    const bars = document.createElement("span");
+    bars.className = "signalBars";
+    for (let i = 0; i < 4; i++) {
+        const bar = document.createElement("span");
+        if (i < barsOn) {
+            bar.className = "on";
+        }
+        bars.appendChild(bar);
+    }
+
+    cell.appendChild(bars);
+    cell.appendChild(document.createTextNode(signal + " dBm"));
 }

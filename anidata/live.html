@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>ANIData - Live Monitoring</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
@@ -10,40 +11,39 @@
     <div class="layout">
 
         <nav class="sidebar" aria-label="Main">
-            <div class="brand">Animal Tracker</div>
+            <div class="brand">AniDATA</div>
             <ul>
-                <li><a href="dash.html" class="nav-link">Dashboard Overview</a></li>
-                <li><a href="tags.html" class="nav-link">Tags &amp; Devices</a></li>
-                <li><a href="live.html" class="nav-link">Live Monitoring</a></li>
-                <li><a href="explorer.html" class="nav-link">Data Explorer</a></li>
+                <li><a href="dash.html" class="nav-link">Overview</a></li>
+                <li><a href="tags.html" class="nav-link">Tags</a></li>
+                <li><a href="live.html" class="nav-link">Live</a></li>
+                <li><a href="explorer.html" class="nav-link">Explorer</a></li>
             </ul>
         </nav>
 
         <main class="main">
 
-            <!-- Testing buttons, top right -->
-            <div id="testButtons">
-                <button id="resetButton">Clear</button>
-                <button id="disconnectButton">Disconnect</button>
-            </div>
-
             <!-- Live Monitoring -->
             <section id="live">
-                <h1>Live Monitoring</h1>
-                <p id="liveStatus"></p>
-
-                <h2>Latest reading</h2>
-                <p id="liveTag">-</p>
-                <p id="liveDetails"></p>
+                <div class="pageHeader">
+                    <div>
+                        <h1>Live Monitoring</h1>
+                        <p id="liveStatus"></p>
+                    </div>
+                    <div id="testButtons">
+                        <span id="connectionPill" hidden></span>
+                        <button id="pauseButton" hidden>Pause</button>
+                        <button id="disconnectButton">Disconnect</button>
+                    </div>
+                </div>
 
                 <table>
                     <thead>
                         <tr>
                             <th>Time</th>
-                            <th>Age</th>
-                            <th>Tag</th>
+                            <th>Animal</th>
                             <th>Knot</th>
-                            <th>RSSI</th>
+                            <th>Signal</th>
+                            <th>Battery</th>
                         </tr>
                     </thead>
                     <tbody id="liveTable"></tbody>

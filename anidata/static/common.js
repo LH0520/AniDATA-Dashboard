@@ -36,6 +36,9 @@ function battery(advertisement) {
     return parseInt(lastByte, 16) + "%";
 }
 
+// A battery under this percent gets highlighted
+const lowBattery = 20;
+
 function isConnected() {
     return sessionStorage.getItem("connected") === "yes";
 }
@@ -147,6 +150,59 @@ function onlyNewReadings(readings) {
 }
 
 
+// A tag or knot counts as Active if it was heard from in the last 5 minutes
+const activeMinutes = 5;
+
+// How many seconds ago a reading was saved, using the API's internet time.
+// createdAt and apiTime are both UTC, so this doesn't depend on this computer's clock.
+function secondsAgo(reading) {
+    const apiText = sessionStorage.getItem("apiTime");
+    // new Date(null) would be the year 1970, so check for a missing time first
+    if (apiText === null || !reading.createdAt) {
+        return null;
+    }
+    const now = new Date(apiText).getTime();
+    const created = new Date(reading.createdAt).getTime();
+    if (isNaN(now) || isNaN(created)) {
+        return null;
+    }
+    // More than 60 seconds in the future is bad data, so we don't know its age
+    if (created > now + 60 * 1000) {
+        return null;
+    }
+    // A reading up to 60 seconds ahead (clocks differ slightly) counts as just now
+    return Math.max(0, Math.round((now - created) / 1000));
+}
+
+function agoText(seconds) {
+    if (seconds === null) {
+        return "-";
+    }
+    if (seconds < 60) {
+        return seconds + " sec ago";
+    }
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) {
+        return minutes + " min ago";
+    }
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) {
+        return hours + " h ago";
+    }
+    return Math.floor(hours / 24) + " d ago";
+}
+
+function tagStatus(seconds) {
+    if (seconds === null) {
+        return "-";
+    }
+    if (seconds <= activeMinutes * 60) {
+        return "Active";
+    }
+    return "Missing";
+}
+
+
 // Testing buttons at the top right of every page
 
 // Disconnect: every page stops loading data and everything saved is forgotten
@@ -155,14 +211,4 @@ function disconnect() {
     location.reload();
 }
 
-// Clear: stays connected, but wipes the saved data and the connect time,
-// so "new readings" start again from now
-function clearSaved() {
-    sessionStorage.removeItem("savedData");
-    sessionStorage.removeItem("connectedAt");
-    sessionStorage.removeItem("apiTime");
-    location.reload();
-}
-
 document.getElementById("disconnectButton").addEventListener("click", disconnect);
-document.getElementById("resetButton").addEventListener("click", clearSaved);
