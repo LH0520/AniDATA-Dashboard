@@ -6,8 +6,6 @@ const refreshTime = 15;
 let loading = false;
 let hasData = false;
 let timer = null;
-// Up here because the code just below can draw the chart as soon as the page loads
-let chart = null;
 
 connectButton.addEventListener("click", connect);
 
@@ -103,7 +101,6 @@ function showAPIdata(data) {
     document.getElementById("readingCount").textContent = readings.length;
 
     showLatest(readings);
-    showChart(readings);
 
     const table = document.getElementById("knotTable");
     table.textContent = "";
@@ -149,76 +146,4 @@ function showLatest(readings) {
     latestTag.textContent = label + show(latest.tagName);
     latestDetails.textContent = "RSSI " + show(latest.rssi) + " | " + show(latest.knotName) +
         " | " + shortTime(latest.advertisedAt);
-}
-
-
-// Chart
-
-// Counts the readings in each of the last 24 hours (Perth time) and draws a bar chart.
-// It uses createdAt (UTC) and the API's time, so it doesn't depend on this computer's clock.
-function showChart(readings) {
-    const chartMessage = document.getElementById("chartMessage");
-
-    // If Chart.js didn't load (e.g. no internet), skip the chart but keep the rest of the page
-    if (typeof Chart === "undefined") {
-        chartMessage.textContent = "The chart could not load.";
-        return;
-    }
-
-    const now = new Date(sessionStorage.getItem("apiTime"));
-    if (isNaN(now.getTime())) {
-        return;
-    }
-
-    // Make the 24 hours, oldest first. Each key looks like "2026-10-29 10",
-    // which is the start of perthTime(), e.g. "2026-10-29 10:24".
-    const hours = [];
-    const counts = {};
-    for (let i = 23; i >= 0; i--) {
-        const hour = new Date(now.getTime() - i * 60 * 60 * 1000);
-        const key = perthTime(hour.toISOString()).slice(0, 13);
-        hours.push(key);
-        counts[key] = 0;
-    }
-
-    // Add one for each reading that falls in one of those hours
-    for (let i = 0; i < readings.length; i++) {
-        const key = perthTime(readings[i].createdAt).slice(0, 13);
-        if (counts[key] !== undefined) {
-            counts[key] += 1;
-        }
-    }
-
-    // Labels like "10:00", and the counts in the same order
-    const labels = [];
-    const values = [];
-    let total = 0;
-    for (let i = 0; i < hours.length; i++) {
-        labels.push(hours[i].slice(11) + ":00");
-        values.push(counts[hours[i]]);
-        total += counts[hours[i]];
-    }
-    chartMessage.textContent = "Last 24 hours: " + total + " of the " + readings.length +
-        " readings the API returned. Older readings aren't available.";
-
-    // Make the chart the first time, after that just swap in the new numbers
-    if (chart === null) {
-        chart = new Chart(document.getElementById("readingsChart"), {
-            type: "bar",
-            data: {
-                labels: labels,
-                datasets: [{ label: "Readings", data: values, backgroundColor: "#2f6f5e" }],
-            },
-            options: {
-                maintainAspectRatio: false,
-                animation: false,
-                plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
-            },
-        });
-    } else {
-        chart.data.labels = labels;
-        chart.data.datasets[0].data = values;
-        chart.update();
-    }
 }

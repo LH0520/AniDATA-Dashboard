@@ -28,7 +28,7 @@ body {
     flex-wrap: wrap;
     gap: 4px 28px;
     list-style: none;
-    margin: 0 0 0 auto;
+    margin: 0;
     padding: 0;
 }
 
@@ -252,7 +252,7 @@ p:has(#knotCount), p:has(#tagCount), p:has(#missingCount), p:has(#readingCount) 
 
 /* status text */
 #statusText, #liveStatus, #deviceCount, #explorerCount, #exportMessage,
-#latestDetails, #chartMessage, #nicknameMessage {
+#latestDetails, #nicknameMessage {
     color: #777;
     font-size: 14px;
 }
@@ -383,10 +383,6 @@ tbody tr:hover td {
 @media (max-width: 700px) {
     .sidebar {
         padding: 8px 16px 0;
-    }
-
-    .sidebar ul {
-        margin-left: 0;
     }
 
     .main {

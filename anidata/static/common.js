@@ -142,7 +142,8 @@ function onlyNewReadings(readings) {
 
     for (let i = 0; i < readings.length; i++) {
         const created = new Date(readings[i].createdAt).getTime();
-        if (created >= earliestAllowed && created <= latestAllowed) {
+        // Fake readings never count as live
+        if (!readings[i].fake && created >= earliestAllowed && created <= latestAllowed) {
             newReadings.push(readings[i]);
         }
     }
