@@ -122,7 +122,7 @@ function showAPIdata(data) {
     }
 }
 
-// Shows the newest reading since Connect. If there isn't one yet,
+// Shows the newest reading from the last 10 minutes. If there isn't one,
 // shows the most recent reading in all the data instead.
 function showLatest(readings) {
     const latestTag = document.getElementById("latestTag");

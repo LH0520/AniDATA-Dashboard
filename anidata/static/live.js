@@ -1,5 +1,6 @@
 const refreshTime = 1;
-const rowsToShow = 20;
+// Saved rows stop growing here so the browser's storage can't fill up
+const maxLiveRows = 5000;
 // Each tag keeps the same dot colour
 const dotColours = ["#c93d8a", "#2f6fdb", "#12877a", "#e0861a", "#7a4fc4", "#b5522b"];
 
@@ -9,6 +10,9 @@ const connectionPill = document.getElementById("connectionPill");
 let loading = false;
 let hasData = false;
 let paused = false;
+// Up here because the code just below can draw the table as soon as the page loads
+let liveReadings = loadLiveReadings();
+let tableDrawn = false;
 
 const pauseButton = document.getElementById("pauseButton");
 pauseButton.addEventListener("click", togglePause);
@@ -81,22 +85,73 @@ function togglePause() {
 }
 
 
-function showLive(allReadings) {
-    // Drop anything from before the user pressed Connect
+// Rows are saved in this browser so they stay after a refresh or closing it.
+// Disconnect clears them.
+function loadLiveReadings() {
+    try {
+        return JSON.parse(localStorage.getItem("liveReadings")) || [];
+    } catch (error) {
+        return [];
+    }
+}
+
+// A reading is only picked up if it's under 10 minutes old when we first see it.
+// After that it stays. Returns true if any were added.
+function addLiveReadings(allReadings) {
+    const ids = new Set();
+    for (let i = 0; i < liveReadings.length; i++) {
+        ids.add(liveReadings[i].id);
+    }
+
     const readings = onlyNewReadings(allReadings);
+    let added = false;
+    for (let i = 0; i < readings.length; i++) {
+        if (readings[i].id && !ids.has(readings[i].id)) {
+            ids.add(readings[i].id);
+            // Save the API's name, so a nickname changed later still shows on this row
+            const reading = Object.assign({}, readings[i]);
+            reading.tagName = reading.originalName;
+            liveReadings.push(reading);
+            added = true;
+        }
+    }
+
+    if (added) {
+        sortNewestFirst(liveReadings);
+        liveReadings = liveReadings.slice(0, maxLiveRows);
+        try {
+            localStorage.setItem("liveReadings", JSON.stringify(liveReadings));
+        } catch (error) {
+            // Storage can be blocked or full. The rows still show until the page closes.
+        }
+    }
+    return added;
+}
+
+
+function showLive(allReadings) {
+    const added = addLiveReadings(allReadings);
+    // Nothing on a row changes once it's there, so only redraw when there's something new
+    if (tableDrawn && !added) {
+        return;
+    }
+    tableDrawn = true;
 
     const table = document.getElementById("liveTable");
     table.textContent = "";
 
-    if (readings.length === 0) {
+    if (liveReadings.length === 0) {
         const row = table.insertRow();
         const cell = row.insertCell();
         cell.colSpan = 5;
-        cell.textContent = "No readings in the last " + liveMinutes + " minutes.";
+        cell.textContent = "No live readings yet. Readings under " + liveMinutes + " minutes old will show here.";
         return;
     }
 
-    for (let i = 0; i < readings.length && i < rowsToShow; i++) {
+    // Work on a copy, because addNicknames changes the names
+    const readings = addNicknames({ readings: JSON.parse(JSON.stringify(liveReadings)) }).readings;
+
+    for (let i = 0; i < readings.length; i++) {
         const reading = readings[i];
         const row = table.insertRow();
         // the readings are newest first, so the first row is the latest

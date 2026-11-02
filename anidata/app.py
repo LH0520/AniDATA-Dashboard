@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, redirect, send_from_directory, abort
 
-from data import get_data, build_tag_names_dict, build_sightings_list, build_table, add_fake_readings
+from data import get_data, build_tag_names_dict, build_sightings_list, build_table
 
 
 # Flask serves the JS and CSS from the "static" folder at /static/ by default
@@ -31,7 +31,6 @@ def api_data():
     tag_names = build_tag_names_dict(items)
     sightings = build_sightings_list(items)
     table = build_table(tag_names, sightings)
-    table = add_fake_readings(table, api_time)
 
     return jsonify({
         "apiTime": api_time,

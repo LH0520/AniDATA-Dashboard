@@ -60,14 +60,50 @@ async function getData() {
     }
 
     if (data.apiTime) {
-        if (sessionStorage.getItem("connectedAt") === null) {
-            sessionStorage.setItem("connectedAt", data.apiTime);
-        }
         sessionStorage.setItem("apiTime", data.apiTime);
     }
 
+    keepSeenReadings(data);
     sessionStorage.setItem("savedData", JSON.stringify(data));
     return addNicknames(data);
+}
+
+// The API only returns 50 items and they aren't the newest 50, so a new reading can
+// push out one from a minute ago. Adding back what we've already seen stops rows disappearing.
+const maxSavedReadings = 500;
+
+function keepSeenReadings(data) {
+    const text = sessionStorage.getItem("savedData");
+    if (text === null) {
+        return;
+    }
+
+    const ids = new Set();
+    for (let i = 0; i < data.readings.length; i++) {
+        ids.add(data.readings[i].id);
+    }
+
+    const oldReadings = JSON.parse(text).readings;
+    for (let i = 0; i < oldReadings.length; i++) {
+        if (oldReadings[i].id && !ids.has(oldReadings[i].id)) {
+            data.readings.push(oldReadings[i]);
+        }
+    }
+
+    sortNewestFirst(data.readings);
+    data.readings = data.readings.slice(0, maxSavedReadings);
+}
+
+// The same order as the server. createdAt is text, so "or ''" covers a missing one.
+function sortNewestFirst(readings) {
+    readings.sort(function (a, b) {
+        const first = a.createdAt || "";
+        const second = b.createdAt || "";
+        if (first === second) {
+            return 0;
+        }
+        return first < second ? 1 : -1;
+    });
 }
 
 function getSavedData() {
@@ -122,28 +158,23 @@ function addNicknames(data) {
     return data;
 }
 
-// Live readings are ones from the last 5 minutes (by the API's internet time)
-const liveMinutes = 5;
+// Live readings are ones from the last 10 minutes (by the API's internet time)
+const liveMinutes = 10;
 
 function onlyNewReadings(readings) {
-    const connectedText = sessionStorage.getItem("connectedAt");
     const apiText = sessionStorage.getItem("apiTime");
-    if (connectedText === null || apiText === null) {
+    if (apiText === null) {
         return [];
     }
 
-    const connectedAt = new Date(connectedText).getTime();
     const apiTime = new Date(apiText).getTime();
-    // Only keep readings since Connect AND from the last 5 minutes.
-    // Without the 5 minutes, a tab left open all day would still show readings from hours ago.
-    const earliestAllowed = Math.max(connectedAt, apiTime - liveMinutes * 60 * 1000);
+    const earliestAllowed = apiTime - liveMinutes * 60 * 1000;
     const latestAllowed = apiTime + 60 * 1000;
     const newReadings = [];
 
     for (let i = 0; i < readings.length; i++) {
         const created = new Date(readings[i].createdAt).getTime();
-        // Fake readings never count as live
-        if (!readings[i].fake && created >= earliestAllowed && created <= latestAllowed) {
+        if (created >= earliestAllowed && created <= latestAllowed) {
             newReadings.push(readings[i]);
         }
     }
@@ -209,6 +240,11 @@ function tagStatus(seconds) {
 // Disconnect: every page stops loading data and everything saved is forgotten
 function disconnect() {
     sessionStorage.clear();
+    try {
+        localStorage.removeItem("liveReadings");
+    } catch (error) {
+        // localStorage can be blocked. There's nothing saved to clear then.
+    }
     location.reload();
 }
 

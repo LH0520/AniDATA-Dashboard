@@ -10,7 +10,7 @@ Tag -> KNOT -> AWS API -> Flask -> Browser
 
 - **Overview:** counts of knots, tags, missing tags and readings, plus the latest reading.
 - **Tags:** every tag and knot in the latest data, with status, battery and signal. You can also give a tag a nickname here.
-- **Live:** real readings from the last 5 minutes, updated every second.
+- **Live:** checks every second. Readings under 10 minutes old are picked up and stay on the page until Disconnect.
 - **Explorer:** filter readings by knot, tag or date, and export them to CSV.
 
 ## Running it
@@ -42,8 +42,7 @@ All the code is in the `anidata` folder.
 
 ## Good to know
 
-- **Sample data:** `FAKE_READINGS` in `data.py` adds 10 hard-coded readings to Overview, Tags and Explorer. They never show on Live.
-- **Limited history:** the API returns about 50 items, so older readings aren't available.
+- **Limited history:** the API returns 50 items, and they aren't always the newest 50. Each browser tab remembers up to 500 readings it has seen, and forgets them on Disconnect or when the tab closes.
 - **Read only:** the dashboard only sends GET requests to the API.
 - **Untrusted data:** anyone can post to the API, so the pages use `textContent` and never `innerHTML`.
 - **Nicknames:** these are saved in the browser, so they don't carry over to another computer.

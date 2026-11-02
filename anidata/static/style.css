@@ -15,6 +15,10 @@ body {
     gap: 4px 28px;
     padding: 0 44px;
     background: #1f4d3a;
+    /* stays at the top when you scroll */
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .brand {

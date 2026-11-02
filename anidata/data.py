@@ -90,48 +90,6 @@ def build_table(tag_names, sightings):
     return table
 
 
-# FAKE DATA for showing the pages when the KNOT isn't sending.
-# Each one is (minutes ago, tag name, MAC, knot, RSSI, advertisement).
-# The last 2 characters of the advertisement are the battery in hex, e.g. 12 is 18%.
-# To remove the fake data, delete this list and add_fake_readings, and its line in app.py.
-FAKE_READINGS = [
-    (1, "Pig 1", "00:00:00:00:00:01", "Knot 2", -83, "4747000012"),
-    (1, "Sheep 6", "00:00:00:00:00:02", "Knot 1", -50, "4747000064"),
-    (2, "Sheep 3", "00:00:00:00:00:03", "Knot 2", -58, "474700005F"),
-    (2, "Pig 1", "00:00:00:00:00:01", "Knot 3", -74, "4747000012"),
-    (3, "Cow 2", "00:00:00:00:00:04", "Knot 2", -61, "4747000058"),
-    (3, "Sheep 6", "00:00:00:00:00:02", "Knot 1", -52, "4747000064"),
-    (4, "Sheep 3", "00:00:00:00:00:03", "Knot 3", -66, "474700005F"),
-    (30, "Cow 2", "00:00:00:00:00:04", "Knot 1", -70, "4747000058"),
-    (95, "Goat 4", "00:00:00:00:00:05", "Knot 3", -88, "474700000F"),
-    (180, "Goat 4", "00:00:00:00:00:05", "Knot 1", -79, "4747000010"),
-]
-
-
-def add_fake_readings(table, api_time):
-    """Add FAKE_READINGS to the table. Their times count back from now, so they never go stale.
-    "fake" tells the Live page to leave them out."""
-    now = datetime.fromisoformat(api_time) if api_time else datetime.now(timezone.utc)
-
-    for i, (minutes, tag, mac, knot, rssi, advertisement) in enumerate(FAKE_READINGS):
-        seen = now - timedelta(minutes=minutes)
-        table.append({
-            "id": f"fake-{i + 1}",
-            "macAddress": mac,
-            "tagName": tag,
-            "advertisedAt": seen.astimezone(AWST).strftime("%Y-%m-%dT%H:%M:%S"),
-            "createdAt": seen.isoformat(),
-            "rssi": rssi,
-            "knotName": knot,
-            "advertisement": advertisement,
-            "fake": True,
-        })
-
-    # The pages expect newest first
-    table.sort(key=lambda row: row["createdAt"] or "", reverse=True)
-    return table
-
-
 def print_table(table):
     """Print the table as neat columns instead of raw dictionaries."""
     # Each column is (heading, key in the row, width). Change these to add or remove columns.
