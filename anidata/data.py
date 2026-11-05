@@ -1,7 +1,14 @@
+# data.py - gets the readings from the tracking API and tidies them up.
+# The API returns a mixed list of "items". Some are tags (which have a name),
+# and some are "advertisements" (one sighting of a tag by a knot/gateway).
+# The functions below join these together into one table of readings.
+# Run this file on its own (python data.py) to print the table in the terminal.
+
 import requests
 from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 
+# The web address of the tracking API
 API_URL = "https://hgmmq7y8xe.execute-api.ap-southeast-2.amazonaws.com/items"
 
 AWST = timezone(timedelta(hours=8))  # Define the timezone for Australia Western Standard Time (AWST)
@@ -14,7 +21,7 @@ def get_data():
     try:
         response = requests.get(API_URL, timeout=10)  # timeout so it can't hang forever
         response.raise_for_status()  # Raise an error for bad responses (4xx and 5xx)
-        data = response.json()
+        data = response.json()  # Turn the JSON text into a Python dictionary
     except requests.exceptions.ConnectionError as e:
         # This has to come BEFORE RequestException, because ConnectionError is a
         # type of RequestException and would never be reached otherwise.
@@ -24,10 +31,12 @@ def get_data():
         print(f"Error fetching data: {e}")
         return None, None
     except ValueError as e:
+        # response.json() raises a ValueError if the reply isn't valid JSON
         print(f"Error parsing JSON: {e}")
         return None, None
 
-    # This check has to be outside the try/except, after the data has been loaded
+    # This check has to be outside the try/except, after the data has been loaded.
+    # We expect something like {"items": [ ... ]}
     if not isinstance(data, dict) or "items" not in data:
         print("The API response has no 'items' list")
         return None, None
@@ -44,6 +53,7 @@ def get_api_time(response):
         print("The API response has no Date header")
         return None
     try:
+        # parsedate_to_datetime reads the header text, isoformat() writes it in the standard format
         return parsedate_to_datetime(date_text).isoformat()
     except (TypeError, ValueError):
         print(f"Could not read the Date header: {date_text}")
@@ -51,8 +61,11 @@ def get_api_time(response):
 
 
 def build_tag_names_dict(items):
+    """Make a dictionary that looks up a tag's name from its MAC address,
+    e.g. {"DC:2C:6E:16:17:B6": "Tag 1"}. Tag items have an id starting with "devicetag-"."""
     tag_names = {}
     for item in items:
+        # .get() gives a default instead of crashing if the key is missing
         if str(item.get("id", "")).startswith("devicetag-"):
             mac = item.get("macAddress")
             if mac:
@@ -61,6 +74,7 @@ def build_tag_names_dict(items):
 
 
 def build_sightings_list(items):
+    """Keep only the advertisement items (each one is a single reading of a tag)."""
     sightings = []
     for item in items:
         if item.get("type") == "advertisement":
@@ -68,25 +82,32 @@ def build_sightings_list(items):
     return sightings
 
 
+def get_created_at(row):
+    """Used to sort the table. "or ''" stops a missing createdAt (None) from crashing the sort."""
+    return row["createdAt"] or ""
+
+
 def build_table(tag_names, sightings):
+    """Join each sighting with its tag's name, giving one dictionary per reading.
+    The table is sorted newest first."""
     table = []
     for sighting in sightings:
         mac = sighting.get("macAddress")
         table.append({
             "id": sighting.get("id"),
             "macAddress": mac,
+            # Look the name up from the dictionary built earlier
             "tagName": tag_names.get(mac, "Unknown tag"),
             "advertisedAt": sighting.get("advertisedAt"),
             "createdAt": sighting.get("createdAt"),
-            "rssi": sighting.get("rssi"),
-            "knotName": sighting.get("knotName"),
-            "advertisement": sighting.get("advertisement"),
+            "rssi": sighting.get("rssi"),  # signal strength, e.g. -71
+            "knotName": sighting.get("knotName"),  # the gateway that heard the tag
+            "advertisement": sighting.get("advertisement"),  # raw hex data from the tag
         })
 
     # Sort AFTER the loop has finished (newest first).
     # Uses createdAt because the KNOT's clock (advertisedAt) can be wrong.
-    # "or ''" stops a missing createdAt from crashing the sort.
-    table.sort(key=lambda row: row["createdAt"] or "", reverse=True)
+    table.sort(key=get_created_at, reverse=True)
     return table
 
 
@@ -101,10 +122,11 @@ def print_table(table):
         ("Gateway", "knotName", 24),
     ]
 
-    # Heading line, then a line of dashes under it
+    # Heading line, then a line of dashes under it.
+    # ljust(width) pads the text with spaces so every column lines up.
     heading = ""
     for title, key, width in columns:
-        heading += f"{title:<{width}}"
+        heading += title.ljust(width)
     print(heading)
     print("-" * len(heading))
 
@@ -115,12 +137,13 @@ def print_table(table):
             value = row[key]
             if value is None:
                 value = ""
-            line += f"{str(value):<{width}}"
+            line += str(value).ljust(width)
         print(line)
 
     print(f"\n{len(table)} readings")
 
 
+# Only runs when this file is run directly, so you can test it without the web server
 if __name__ == "__main__":
     items, api_time = get_data()
     if items is None:

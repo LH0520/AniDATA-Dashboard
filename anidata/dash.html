@@ -10,10 +10,11 @@
 <body>
     <div class="layout">
 
+        <!-- Menu across the top. The link for this page has the "active" class so it is highlighted. -->
         <nav class="sidebar" aria-label="Main">
             <div class="brand">AniDATA</div>
             <ul>
-                <li><a href="dash.html" class="nav-link">Overview</a></li>
+                <li><a href="dash.html" class="nav-link active">Overview</a></li>
                 <li><a href="tags.html" class="nav-link">Tags</a></li>
                 <li><a href="live.html" class="nav-link">Live</a></li>
                 <li><a href="explorer.html" class="nav-link">Explorer</a></li>
@@ -35,10 +36,11 @@
                 <span id="statusText">Not connected</span>
                 <p id="errorText"></p>
 
-                <p>Knots: <span id="knotCount">-</span></p>
-                <p>Tags: <span id="tagCount">-</span></p>
-                <p>Missing tags: <span id="missingCount">-</span></p>
-                <p>Readings: <span id="readingCount">-</span></p>
+                <!-- The totals. dash.js fills in the numbers. -->
+                <p class="stat">Knots: <span id="knotCount">-</span></p>
+                <p class="stat">Tags: <span id="tagCount">-</span></p>
+                <p class="stat">Missing tags: <span id="missingCount">-</span></p>
+                <p class="stat">Readings: <span id="readingCount">-</span></p>
 
                 <h2>Latest reading</h2>
                 <p id="latestTag">-</p>
@@ -53,12 +55,14 @@
                             <th>Last reading</th>
                         </tr>
                     </thead>
+                    <!-- The rows are added by dash.js -->
                     <tbody id="knotTable"></tbody>
                 </table>
             </section>
 
         </main>
     </div>
+    <!-- common.js has the shared functions, so it must load before this page's own script -->
     <script src="/static/common.js"></script>
     <script src="/static/dash.js"></script>
 </body>

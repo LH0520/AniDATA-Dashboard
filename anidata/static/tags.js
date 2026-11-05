@@ -1,5 +1,10 @@
-const refreshTime = 15;
+// tags.js - the Tags & Devices page (tags.html).
+// Shows one row per tag and one row per knot, with whether each is Active or Missing.
+// Also has a search box and lets the user give a tag a nickname. Refreshes every 15 seconds.
 
+const refreshTime = 15;  // seconds between refreshes
+
+// Get the parts of the page we need, using their id from tags.html
 const deviceCount = document.getElementById("deviceCount");
 const searchBox = document.getElementById("searchBox");
 const nicknameTag = document.getElementById("nicknameTag");
@@ -7,11 +12,12 @@ const nicknameText = document.getElementById("nicknameText");
 const nicknameButton = document.getElementById("nicknameButton");
 const nicknameMessage = document.getElementById("nicknameMessage");
 
-let loading = false;
-let hasData = false;
+let loading = false;  // true while waiting for the server
+let hasData = false;  // true once we have shown some data
 // The last readings we got, so the search box can redraw the tables without reloading
 let lastReadings = [];
 
+// "input" runs every time a letter is typed in the search box
 searchBox.addEventListener("input", function () {
     showTags(lastReadings);
 });
@@ -20,6 +26,7 @@ nicknameButton.addEventListener("click", saveNickname);
 
 // Only load anything once the user has pressed Connect on the overview page
 if (isConnected()) {
+    // Show the saved data straight away, then get new data
     const saved = getSavedData();
     if (saved !== null) {
         showTags(saved.readings);
@@ -32,6 +39,7 @@ if (isConnected()) {
 }
 
 
+// Gets new data from the server and redraws the tables
 async function loadTags() {
     if (loading) {
         return;
@@ -66,7 +74,8 @@ function addStatusCell(row, seconds) {
     }
 }
 
-// True if the search box is empty, or any of the texts contain what was typed
+// True if the search box is empty, or any of the texts contain what was typed.
+// Both sides are made lower case so the search ignores capital letters.
 function matchesSearch(texts) {
     const search = searchBox.value.trim().toLowerCase();
     if (search === "") {
@@ -110,6 +119,7 @@ function showTags(readings) {
         knots[knotName].readings += 1;
     }
 
+    // Object.keys gives a list of the MAC addresses / knot names, sorted A to Z
     const macs = Object.keys(tags).sort();
     const knotNames = Object.keys(knots).sort();
 
@@ -118,6 +128,7 @@ function showTags(readings) {
 
     fillNicknameList(macs, tags);
 
+    // Tags table: empty it, then add one row per tag that matches the search
     const tagTable = document.getElementById("tagTable");
     tagTable.textContent = "";
     for (let i = 0; i < macs.length; i++) {
@@ -143,10 +154,11 @@ function showTags(readings) {
     }
     if (tagTable.rows.length === 0) {
         const cell = tagTable.insertRow().insertCell();
-        cell.colSpan = 8;
+        cell.colSpan = 8;  // one cell stretched across all 8 columns
         cell.textContent = "No tags match.";
     }
 
+    // Knots table: the same idea, one row per knot that matches the search
     const knotTable = document.getElementById("deviceKnotTable");
     knotTable.textContent = "";
     for (let i = 0; i < knotNames.length; i++) {
@@ -165,13 +177,13 @@ function showTags(readings) {
     }
     if (knotTable.rows.length === 0) {
         const cell = knotTable.insertRow().insertCell();
-        cell.colSpan = 6;
+        cell.colSpan = 6;  // one cell stretched across all 6 columns
         cell.textContent = "No knots match.";
     }
 }
 
 
-// Nicknames
+// ---------- Nicknames ----------
 
 // Fills the Tag drop-down, keeping whichever tag was picked
 function fillNicknameList(macs, tags) {
@@ -185,6 +197,7 @@ function fillNicknameList(macs, tags) {
         nicknameTag.appendChild(option);
     }
 
+    // Pick the same tag again if it's still in the list, otherwise the first one is picked
     if (macs.includes(picked)) {
         nicknameTag.value = picked;
     } else {
@@ -198,6 +211,7 @@ function fillNicknameBox() {
     for (let i = 0; i < lastReadings.length; i++) {
         const reading = lastReadings[i];
         if (reading.macAddress === nicknameTag.value) {
+            // If the name shown isn't the API's name, it must be a nickname
             if (reading.tagName !== reading.originalName) {
                 nicknameText.value = reading.tagName;
             }
@@ -206,12 +220,14 @@ function fillNicknameBox() {
     }
 }
 
+// Runs when the Save button is clicked
 function saveNickname() {
     if (nicknameTag.value === "") {
         nicknameMessage.textContent = "There are no tags to nickname yet.";
         return;
     }
 
+    // setNickname (in common.js) returns true if it saved
     if (setNickname(nicknameTag.value, nicknameText.value)) {
         nicknameMessage.textContent = "Saved.";
     } else {

@@ -27,6 +27,8 @@ python app.py
 
 Then open http://127.0.0.1:5000 and press **Connect to API** on the Overview page.
 
+For the full setup steps, settings and troubleshooting, see [INSTALL.md](INSTALL.md).
+
 ## Files
 
 All the code is in the `anidata` folder.
@@ -47,11 +49,3 @@ All the code is in the `anidata` folder.
 - **Untrusted data:** anyone can post to the API, so the pages use `textContent` and never `innerHTML`.
 - **Nicknames:** these are saved in the browser, so they don't carry over to another computer.
 - **Status:** a tag counts as Missing if its newest reading is more than 5 minutes old.
-
-## Hosting
-
-Hosted on Render, which deploys from `main`:
-
-- **Root directory:** `anidata`
-- **Build command:** `pip install -r requirements.txt`
-- **Start command:** `gunicorn app:app`

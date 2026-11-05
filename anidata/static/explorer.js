@@ -1,5 +1,10 @@
-const refreshTime = 5;
+// explorer.js - the Data Explorer page (explorer.html).
+// Lets the user filter the readings by knot, tag and date, see them in a table,
+// and download the filtered readings as a CSV file. Refreshes every 5 seconds.
 
+const refreshTime = 5;  // seconds between refreshes
+
+// Get the parts of the page we need, using their id from explorer.html
 const knotBoxes = document.getElementById("knotBoxes");
 const tagBoxes = document.getElementById("tagBoxes");
 const filterFrom = document.getElementById("filterFrom");
@@ -7,15 +12,16 @@ const filterTo = document.getElementById("filterTo");
 const explorerCount = document.getElementById("explorerCount");
 const exportMessage = document.getElementById("exportMessage");
 
-let loading = false;
-let allReadings = [];
-let shownReadings = [];
+let loading = false;     // true while waiting for the server
+let allReadings = [];    // every reading we have
+let shownReadings = [];  // only the readings that match the filters (what's in the table)
 
 // The tick box lists from the last refresh, so they're only rebuilt when something changes
 let lastKnotList = "";
 let lastTagList = "";
 
-// A "change" on any tick box inside the div bubbles up to the div, so one listener covers them all
+// Redraw the table whenever a filter changes.
+// A "change" on any tick box inside the div bubbles up to the div, so one listener covers them all.
 knotBoxes.addEventListener("change", showExplorer);
 tagBoxes.addEventListener("change", showExplorer);
 filterFrom.addEventListener("change", showExplorer);
@@ -25,6 +31,7 @@ document.getElementById("exportButton").addEventListener("click", exportCSV);
 
 // Only load anything once the user has pressed Connect on the overview page
 if (isConnected()) {
+    // Show the saved data straight away, then get new data
     const saved = getSavedData();
     if (saved !== null) {
         allReadings = saved.readings;
@@ -38,6 +45,7 @@ if (isConnected()) {
 }
 
 
+// Gets new data from the server and redraws the filters and table
 async function loadExplorer() {
     if (loading) {
         return;
@@ -75,6 +83,7 @@ function fillFilters() {
     knotNames.sort();
     const macs = Object.keys(tagNames).sort();
 
+    // join() turns the list into one piece of text, so two lists can be compared with !==
     if (knotNames.join() !== lastKnotList) {
         lastKnotList = knotNames.join();
         // slice() makes a copy, so the values and labels are two separate lists
@@ -83,6 +92,7 @@ function fillFilters() {
 
     if (macs.join() !== lastTagList) {
         lastTagList = macs.join();
+        // Each tag's label is its name followed by its MAC address
         const labels = [];
         for (let i = 0; i < macs.length; i++) {
             labels.push(tagNames[macs[i]] + " (" + macs[i] + ")");
@@ -117,6 +127,7 @@ function fillBoxes(container, values, labels) {
         }
     }
 
+    // Remove the old boxes, then make a new tick box for each value
     container.textContent = "";
     for (let i = 0; i < values.length; i++) {
         const box = document.createElement("input");
@@ -132,6 +143,7 @@ function fillBoxes(container, values, labels) {
 }
 
 
+// Unticks every box, empties the dates, and redraws the table
 function clearFilters() {
     const boxes = document.querySelectorAll("#knotBoxes input, #tagBoxes input");
     for (let i = 0; i < boxes.length; i++) {
@@ -152,9 +164,11 @@ function showExplorer() {
 
     for (let i = 0; i < allReadings.length; i++) {
         const reading = allReadings[i];
-        // advertisedAt starts with the date, e.g. "2026-10-19", the same format the date boxes use
+        // advertisedAt starts with the date, e.g. "2026-10-19", the same format the date boxes use.
+        // Dates in this format can be compared as text, e.g. "2026-10-19" < "2026-10-20".
         const day = String(reading.advertisedAt || "").slice(0, 10);
 
+        // "continue" skips to the next reading if this one fails a filter
         if (knots.length > 0 && !knots.includes(reading.knotName)) {
             continue;
         }
@@ -173,13 +187,14 @@ function showExplorer() {
     explorerCount.textContent = "Showing " + shownReadings.length + " of " + allReadings.length +
         " readings. Updated " + new Date().toLocaleTimeString("en-AU");
 
+    // Empty the table, then add one row per matching reading
     const table = document.getElementById("explorerTable");
     table.textContent = "";
 
     if (shownReadings.length === 0) {
         const row = table.insertRow();
         const cell = row.insertCell();
-        cell.colSpan = 8;
+        cell.colSpan = 8;  // one cell stretched across all 8 columns
         cell.textContent = "No readings match these filters.";
         return;
     }
@@ -212,7 +227,8 @@ function csvCell(value) {
         text = "'" + text;
     }
 
-    // Commas, quotes or new lines would break the columns, so wrap those in quotes
+    // Commas, quotes or new lines would break the columns, so wrap those in quotes.
+    // A quote inside the text is written twice ("") which is how CSV files store it.
     if (/[",\r\n]/.test(text)) {
         text = '"' + text.replace(/"/g, '""') + '"';
     }
@@ -228,8 +244,10 @@ function exportCSV() {
         return;
     }
 
+    // The first line is the column headings
     const lines = ["Seen at,Tag,MAC address,RSSI,Knot,Recorded at,Advertisement,ID"];
 
+    // Then one line per reading, with the values separated by commas
     for (let i = 0; i < shownReadings.length; i++) {
         const reading = shownReadings[i];
         const values = [
@@ -250,6 +268,8 @@ function exportCSV() {
         lines.push(cells.join(","));
     }
 
+    // A Blob is a file made in the browser's memory. Making a hidden link to it
+    // and clicking it makes the browser download the file.
     const file = new Blob([lines.join("\r\n")], { type: "text/csv" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(file);

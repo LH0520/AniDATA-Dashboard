@@ -1,3 +1,8 @@
+/* style.css - the look of every page.
+   A name starting with # styles the element with that id (e.g. #connectButton),
+   and a name starting with . styles every element with that class (e.g. .stat). */
+
+/* the whole page: font, text colour and background */
 body {
     margin: 0;
     font-family: "Segoe UI", -apple-system, "Helvetica Neue", Arial, sans-serif;
@@ -48,11 +53,8 @@ body {
     color: white;
 }
 
-/* highlight the page we're on */
-body:has(#overview) a[href="dash.html"],
-body:has(#tags) a[href="tags.html"],
-body:has(#live) a[href="live.html"],
-body:has(#explorer) a[href="explorer.html"] {
+/* highlight the page we're on (each page puts "active" on its own link) */
+.nav-link.active {
     color: white;
     font-weight: 600;
     border-bottom-color: #6fcf97;
@@ -167,6 +169,7 @@ h1 {
     background: #2f7d55;
 }
 
+/* each bar is taller than the one before it */
 .signalBars span:nth-child(1) { height: 25%; }
 .signalBars span:nth-child(2) { height: 50%; }
 .signalBars span:nth-child(3) { height: 75%; }
@@ -227,7 +230,7 @@ button:disabled {
 }
 
 /* dashboard numbers in a row */
-p:has(#knotCount), p:has(#tagCount), p:has(#missingCount), p:has(#readingCount) {
+.stat {
     display: inline-block;
     min-width: 130px;
     margin: 24px 0 0;
@@ -373,7 +376,7 @@ tbody tr:hover td {
     background: #eef2ec;
 }
 
-/* explorer table is wide so let it scroll */
+/* explorer table is wide so let it scroll sideways */
 #explorer table {
     display: block;
     overflow-x: auto;
@@ -383,7 +386,7 @@ tbody tr:hover td {
     white-space: nowrap;
 }
 
-/* phones */
+/* phones: these rules only apply when the screen is 700px wide or less */
 @media (max-width: 700px) {
     .sidebar {
         padding: 8px 16px 0;
@@ -403,7 +406,7 @@ tbody tr:hover td {
         overflow-x: auto;
     }
 
-    p:has(#knotCount), p:has(#tagCount), p:has(#missingCount), p:has(#readingCount) {
+    .stat {
         min-width: 90px;
     }
 }

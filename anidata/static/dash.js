@@ -1,11 +1,16 @@
+// dash.js - the Dashboard Overview page (dash.html).
+// Shows the Connect button, the totals (knots, tags, missing tags, readings),
+// the latest reading, and a table of knots. Refreshes every 15 seconds.
+
+// Get the parts of the page we need to change, using their id from dash.html
 const connectButton = document.getElementById("connectButton");
 const statusText = document.getElementById("statusText");
 const errorText = document.getElementById("errorText");
 
-const refreshTime = 15;
-let loading = false;
-let hasData = false;
-let timer = null;
+const refreshTime = 15;  // seconds between refreshes
+let loading = false;     // true while waiting for the server, so we don't ask twice at once
+let hasData = false;     // true once we have shown some data
+let timer = null;        // the repeating timer, so it is only started once
 
 connectButton.addEventListener("click", connect);
 
@@ -22,11 +27,13 @@ if (isConnected()) {
     loadAPI();
 }
 
+// Runs when the Connect button is clicked
 function connect() {
     setConnected();
     loadAPI();
 }
 
+// Loads the data from the server and shows it. Also starts the refresh timer.
 async function loadAPI() {
     if (loading) {
         return;
@@ -54,7 +61,8 @@ async function loadAPI() {
         }
     }
 
-    // Start the timer once, even if the first try failed, so it keeps retrying
+    // Start the timer once, even if the first try failed, so it keeps retrying.
+    // setInterval runs loadAPI again every refreshTime seconds (it uses milliseconds).
     if (timer === null) {
         timer = setInterval(loadAPI, refreshTime * 1000);
     }
@@ -92,23 +100,30 @@ function showAPIdata(data) {
         }
     }
 
+    // Put the totals on the page. Object.keys gives a list of the knot names.
     const knotNames = Object.keys(knots).sort();
     document.getElementById("knotCount").textContent = knotNames.length;
     document.getElementById("tagCount").textContent = tags.length;
     const missingCount = document.getElementById("missingCount");
     missingCount.textContent = missing;
-    missingCount.className = missing > 0 ? "statusMissing" : "";
+    // Show the missing number in red (a class in style.css) if there are any
+    if (missing > 0) {
+        missingCount.className = "statusMissing";
+    } else {
+        missingCount.className = "";
+    }
     document.getElementById("readingCount").textContent = readings.length;
 
     showLatest(readings);
 
+    // Empty the knot table, then add one row per knot
     const table = document.getElementById("knotTable");
     table.textContent = "";
 
     if (knotNames.length === 0) {
         const row = table.insertRow();
         const cell = row.insertCell();
-        cell.colSpan = 3;
+        cell.colSpan = 3;  // one cell stretched across all 3 columns
         cell.textContent = "No readings recorded yet.";
         return;
     }

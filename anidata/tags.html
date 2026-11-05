@@ -10,11 +10,12 @@
 <body>
     <div class="layout">
 
+        <!-- Menu across the top. The link for this page has the "active" class so it is highlighted. -->
         <nav class="sidebar" aria-label="Main">
             <div class="brand">AniDATA</div>
             <ul>
                 <li><a href="dash.html" class="nav-link">Overview</a></li>
-                <li><a href="tags.html" class="nav-link">Tags</a></li>
+                <li><a href="tags.html" class="nav-link active">Tags</a></li>
                 <li><a href="live.html" class="nav-link">Live</a></li>
                 <li><a href="explorer.html" class="nav-link">Explorer</a></li>
             </ul>
@@ -62,6 +63,7 @@
                             <th>Seen by knot</th>
                         </tr>
                     </thead>
+                    <!-- The rows are added by tags.js -->
                     <tbody id="tagTable"></tbody>
                 </table>
 
@@ -77,12 +79,14 @@
                             <th>Last tag seen</th>
                         </tr>
                     </thead>
+                    <!-- The rows are added by tags.js -->
                     <tbody id="deviceKnotTable"></tbody>
                 </table>
             </section>
 
         </main>
     </div>
+    <!-- common.js has the shared functions, so it must load before this page's own script -->
     <script src="/static/common.js"></script>
     <script src="/static/tags.js"></script>
 </body>
