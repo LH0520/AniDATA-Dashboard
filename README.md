@@ -9,7 +9,8 @@ Tag -> KNOT -> AWS API -> Flask -> Browser
 ## Pages
 
 - **Overview:** counts of knots, tags, missing tags and readings, plus the latest reading.
-- **Tags:** every tag and knot in the latest data, with status, battery and signal.- **Live:** checks every second. Readings under 10 minutes old are picked up and stay on the page until Disconnect.
+- **Tags:** every tag and knot in the latest data, with status, battery and signal.
+- **Live:** checks every second. Readings under 10 minutes old are picked up and stay on the page until Disconnect.
 - **Explorer:** filter readings by knot, tag or date, and export them to CSV.
 
 ## Running it
