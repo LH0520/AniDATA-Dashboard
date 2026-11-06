@@ -1,32 +1,23 @@
-// tags.js - the Tags & Devices page (tags.html).
-// Shows one row per tag and one row per knot, with whether each is Active or Missing.
-// Also has a search box and lets the user give a tag a nickname. Refreshes every 15 seconds.
+//tags.js
+// the Tags page, one row per tag and per knot showing if its Active or Missing, plus a search box
 
 const refreshTime = 15;  // seconds between refreshes
 
-// Get the parts of the page we need, using their id from tags.html
 const deviceCount = document.getElementById("deviceCount");
 const searchBox = document.getElementById("searchBox");
-const nicknameTag = document.getElementById("nicknameTag");
-const nicknameText = document.getElementById("nicknameText");
-const nicknameButton = document.getElementById("nicknameButton");
-const nicknameMessage = document.getElementById("nicknameMessage");
 
-let loading = false;  // true while waiting for the server
-let hasData = false;  // true once we have shown some data
-// The last readings we got, so the search box can redraw the tables without reloading
+let loading = false;
+let hasData = false;
+// keeps the last readings so the search box can redraw without reloading
 let lastReadings = [];
 
-// "input" runs every time a letter is typed in the search box
+//runs every time a letter is typed in the search box
 searchBox.addEventListener("input", function () {
     showTags(lastReadings);
 });
-nicknameTag.addEventListener("change", fillNicknameBox);
-nicknameButton.addEventListener("click", saveNickname);
 
-// Only load anything once the user has pressed Connect on the overview page
+// only loads once they have pressed Connect on the overview page
 if (isConnected()) {
-    // Show the saved data straight away, then get new data
     const saved = getSavedData();
     if (saved !== null) {
         showTags(saved.readings);
@@ -39,7 +30,6 @@ if (isConnected()) {
 }
 
 
-// Gets new data from the server and redraws the tables
 async function loadTags() {
     if (loading) {
         return;
@@ -62,7 +52,7 @@ async function loadTags() {
 }
 
 
-// Adds the Status cell, coloured by the class in style.css
+// the status cell, green for Active and red for Missing (classes are in style.css)
 function addStatusCell(row, seconds) {
     const cell = row.insertCell();
     const status = tagStatus(seconds);
@@ -74,8 +64,7 @@ function addStatusCell(row, seconds) {
     }
 }
 
-// True if the search box is empty, or any of the texts contain what was typed.
-// Both sides are made lower case so the search ignores capital letters.
+// true if the search box is empty or any of the texts have what was typed, ignores capitals
 function matchesSearch(texts) {
     const search = searchBox.value.trim().toLowerCase();
     if (search === "") {
@@ -90,25 +79,25 @@ function matchesSearch(texts) {
 }
 
 
-// Shows every tag and knot in all the readings, not just the new ones
+// shows every tag and knot in all the readings not just the new ones
 function showTags(readings) {
     lastReadings = readings;
 
-    // tags holds the newest reading for each MAC address, so each tag is only listed once.
-    // knots holds one entry per knot name: how many readings it sent and its newest one.
+    // tags has the newest reading for each MAC so each tag only shows once
+    // knots has each knot name with how many readings it sent and its newest one
     const tags = {};
     const knots = {};
 
     for (let i = 0; i < readings.length; i++) {
         const reading = readings[i];
-        // Skip junk readings with no MAC address
+        //skip junk readings with no MAC
         if (!reading.macAddress) {
             continue;
         }
         const mac = reading.macAddress;
         const knotName = show(reading.knotName);
 
-        // The readings are newest first, so the first one for each tag or knot is its latest
+        // readings are newest first so the first one for each tag or knot is its latest
         if (tags[mac] === undefined) {
             tags[mac] = reading;
         }
@@ -119,21 +108,18 @@ function showTags(readings) {
         knots[knotName].readings += 1;
     }
 
-    // Object.keys gives a list of the MAC addresses / knot names, sorted A to Z
     const macs = Object.keys(tags).sort();
     const knotNames = Object.keys(knots).sort();
 
     deviceCount.textContent = macs.length + " tags and " + knotNames.length + " knots recorded. Updated " +
         new Date().toLocaleTimeString("en-AU");
 
-    fillNicknameList(macs, tags);
-
-    // Tags table: empty it, then add one row per tag that matches the search
+    // tags table, one row per tag that matches the search
     const tagTable = document.getElementById("tagTable");
     tagTable.textContent = "";
     for (let i = 0; i < macs.length; i++) {
         const latest = tags[macs[i]];
-        if (!matchesSearch([latest.tagName, latest.originalName, macs[i], latest.knotName])) {
+        if (!matchesSearch([latest.tagName, macs[i], latest.knotName])) {
             continue;
         }
         const seconds = secondsAgo(latest);
@@ -141,12 +127,12 @@ function showTags(readings) {
         row.insertCell().textContent = show(latest.tagName);
         row.insertCell().textContent = macs[i];
         addStatusCell(row, seconds);
-        row.insertCell().textContent = shortTime(latest.advertisedAt);
+        row.insertCell().textContent = perthTime(latest.createdAt);
         row.insertCell().textContent = agoText(seconds);
         row.insertCell().textContent = show(latest.rssi);
         const batteryCell = row.insertCell();
         batteryCell.textContent = battery(latest.advertisement);
-        // parseInt("87%") is 87. "-" gives NaN, which is never under the limit.
+        // parseInt("87%") gives 87, "-" gives NaN which is never under the limit
         if (parseInt(batteryCell.textContent) < lowBattery) {
             batteryCell.className = "statusMissing";
         }
@@ -154,11 +140,11 @@ function showTags(readings) {
     }
     if (tagTable.rows.length === 0) {
         const cell = tagTable.insertRow().insertCell();
-        cell.colSpan = 8;  // one cell stretched across all 8 columns
+        cell.colSpan = 8;
         cell.textContent = "No tags match.";
     }
 
-    // Knots table: the same idea, one row per knot that matches the search
+    //knots table, same idea
     const knotTable = document.getElementById("deviceKnotTable");
     knotTable.textContent = "";
     for (let i = 0; i < knotNames.length; i++) {
@@ -171,72 +157,13 @@ function showTags(readings) {
         row.insertCell().textContent = knotNames[i];
         addStatusCell(row, seconds);
         row.insertCell().textContent = knot.readings;
-        row.insertCell().textContent = shortTime(knot.latest.advertisedAt);
+        row.insertCell().textContent = perthTime(knot.latest.createdAt);
         row.insertCell().textContent = agoText(seconds);
         row.insertCell().textContent = show(knot.latest.tagName);
     }
     if (knotTable.rows.length === 0) {
         const cell = knotTable.insertRow().insertCell();
-        cell.colSpan = 6;  // one cell stretched across all 6 columns
+        cell.colSpan = 6;
         cell.textContent = "No knots match.";
-    }
-}
-
-
-// ---------- Nicknames ----------
-
-// Fills the Tag drop-down, keeping whichever tag was picked
-function fillNicknameList(macs, tags) {
-    const picked = nicknameTag.value;
-    nicknameTag.textContent = "";
-
-    for (let i = 0; i < macs.length; i++) {
-        const option = document.createElement("option");
-        option.value = macs[i];
-        option.textContent = show(tags[macs[i]].tagName) + " (" + macs[i] + ")";
-        nicknameTag.appendChild(option);
-    }
-
-    // Pick the same tag again if it's still in the list, otherwise the first one is picked
-    if (macs.includes(picked)) {
-        nicknameTag.value = picked;
-    } else {
-        fillNicknameBox();
-    }
-}
-
-// Puts the picked tag's current nickname in the text box (empty if it has none)
-function fillNicknameBox() {
-    nicknameText.value = "";
-    for (let i = 0; i < lastReadings.length; i++) {
-        const reading = lastReadings[i];
-        if (reading.macAddress === nicknameTag.value) {
-            // If the name shown isn't the API's name, it must be a nickname
-            if (reading.tagName !== reading.originalName) {
-                nicknameText.value = reading.tagName;
-            }
-            return;
-        }
-    }
-}
-
-// Runs when the Save button is clicked
-function saveNickname() {
-    if (nicknameTag.value === "") {
-        nicknameMessage.textContent = "There are no tags to nickname yet.";
-        return;
-    }
-
-    // setNickname (in common.js) returns true if it saved
-    if (setNickname(nicknameTag.value, nicknameText.value)) {
-        nicknameMessage.textContent = "Saved.";
-    } else {
-        nicknameMessage.textContent = "Could not save - this browser is blocking storage.";
-    }
-
-    // Redraw from the saved data so the new name shows straight away
-    const saved = getSavedData();
-    if (saved !== null) {
-        showTags(saved.readings);
     }
 }

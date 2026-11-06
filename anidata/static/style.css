@@ -202,7 +202,7 @@ button:disabled {
     cursor: default;
 }
 
-#connectButton, #nicknameButton {
+#connectButton {
     color: white;
     background: #2f6f5e;
     border-color: #2f6f5e;
@@ -212,7 +212,7 @@ button:disabled {
     margin-right: 10px;
 }
 
-#connectButton:hover, #nicknameButton:hover {
+#connectButton:hover {
     background: #265a4c;
 }
 
@@ -259,7 +259,7 @@ button:disabled {
 
 /* status text */
 #statusText, #liveStatus, #deviceCount, #explorerCount, #exportMessage,
-#latestDetails, #nicknameMessage {
+#latestDetails {
     color: #777;
     font-size: 14px;
 }
@@ -269,7 +269,7 @@ button:disabled {
     margin: 6px 0 0;
 }
 
-#exportMessage:empty, #nicknameMessage:empty {
+#exportMessage:empty {
     display: none;
 }
 
@@ -281,10 +281,6 @@ button:disabled {
 
 #latestDetails {
     margin: 2px 0 0;
-}
-
-#nicknameMessage {
-    margin: 8px 0 0;
 }
 
 /* inputs and filters */

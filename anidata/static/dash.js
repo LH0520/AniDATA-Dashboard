@@ -1,21 +1,18 @@
-// dash.js - the Dashboard Overview page (dash.html).
-// Shows the Connect button, the totals (knots, tags, missing tags, readings),
-// the latest reading, and a table of knots. Refreshes every 15 seconds.
+//dash.js
+// the Overview page, shows the Connect button, the totals, the latest reading and the knots table
 
-// Get the parts of the page we need to change, using their id from dash.html
 const connectButton = document.getElementById("connectButton");
 const statusText = document.getElementById("statusText");
 const errorText = document.getElementById("errorText");
 
 const refreshTime = 15;  // seconds between refreshes
-let loading = false;     // true while waiting for the server, so we don't ask twice at once
-let hasData = false;     // true once we have shown some data
-let timer = null;        // the repeating timer, so it is only started once
+let loading = false;     // stops it asking the server twice at once
+let hasData = false;
+let timer = null;        // so the timer only gets started once
 
 connectButton.addEventListener("click", connect);
 
-// If the user already connected on another page, show the saved data
-// straight away and keep refreshing
+// if they already connected on another page, show the saved data straight away and keep refreshing
 if (isConnected()) {
     connectButton.hidden = true;
     const saved = getSavedData();
@@ -27,13 +24,12 @@ if (isConnected()) {
     loadAPI();
 }
 
-// Runs when the Connect button is clicked
 function connect() {
     setConnected();
     loadAPI();
 }
 
-// Loads the data from the server and shows it. Also starts the refresh timer.
+// loads the data and shows it, also starts the refresh timer
 async function loadAPI() {
     if (loading) {
         return;
@@ -49,7 +45,7 @@ async function loadAPI() {
         const data = await getData();
         showAPIdata(data);
         hasData = true;
-        // Hide the button once it has worked. If the first try fails it stays, so the user can try again.
+        // hide the button once it works, if the first try fails it stays so you can try again
         connectButton.hidden = true;
         statusText.textContent = "Connected - Refreshing every " + refreshTime + " seconds";
     } catch (error) {
@@ -61,8 +57,7 @@ async function loadAPI() {
         }
     }
 
-    // Start the timer once, even if the first try failed, so it keeps retrying.
-    // setInterval runs loadAPI again every refreshTime seconds (it uses milliseconds).
+    //start the timer even if the first try failed so it keeps retrying
     if (timer === null) {
         timer = setInterval(loadAPI, refreshTime * 1000);
     }
@@ -70,12 +65,12 @@ async function loadAPI() {
     connectButton.disabled = false;
 }
 
-// The overview counts every reading the API has, not just the new ones
+// counts every reading we have, not just the new ones
 function showAPIdata(data) {
     const readings = data.readings;
 
-    // knots holds one entry per knot name: how many readings it sent and the newest one.
-    // tags is a list of the MAC addresses seen, with no repeats.
+    // knots has each knot name with how many readings it sent and its newest one
+    // tags is the MAC addresses seen with no repeats
     const knots = {};
     const tags = [];
     let missing = 0;
@@ -84,14 +79,13 @@ function showAPIdata(data) {
         const reading = readings[i];
         const name = show(reading.knotName);
 
-        // The readings are newest first, so the first one for each knot is its latest
+        // readings are newest first so the first one for each knot is its latest
         if (knots[name] === undefined) {
-            knots[name] = { readings: 0, lastReading: reading.advertisedAt };
+            knots[name] = { readings: 0, lastReading: reading.createdAt };
         }
         knots[name].readings += 1;
 
-        // Skip junk readings with no MAC address, the same as the Tags page.
-        // The first reading for each tag is its newest, so that one decides if it's missing.
+        //skip junk readings with no MAC, the first one for each tag decides if its missing
         if (reading.macAddress && !tags.includes(reading.macAddress)) {
             tags.push(reading.macAddress);
             if (tagStatus(secondsAgo(reading)) === "Missing") {
@@ -100,13 +94,12 @@ function showAPIdata(data) {
         }
     }
 
-    // Put the totals on the page. Object.keys gives a list of the knot names.
     const knotNames = Object.keys(knots).sort();
     document.getElementById("knotCount").textContent = knotNames.length;
     document.getElementById("tagCount").textContent = tags.length;
     const missingCount = document.getElementById("missingCount");
     missingCount.textContent = missing;
-    // Show the missing number in red (a class in style.css) if there are any
+    // missing number goes red if there are any
     if (missing > 0) {
         missingCount.className = "statusMissing";
     } else {
@@ -116,14 +109,13 @@ function showAPIdata(data) {
 
     showLatest(readings);
 
-    // Empty the knot table, then add one row per knot
     const table = document.getElementById("knotTable");
     table.textContent = "";
 
     if (knotNames.length === 0) {
         const row = table.insertRow();
         const cell = row.insertCell();
-        cell.colSpan = 3;  // one cell stretched across all 3 columns
+        cell.colSpan = 3;
         cell.textContent = "No readings recorded yet.";
         return;
     }
@@ -133,12 +125,11 @@ function showAPIdata(data) {
         const row = table.insertRow();
         row.insertCell().textContent = name;
         row.insertCell().textContent = knots[name].readings;
-        row.insertCell().textContent = shortTime(knots[name].lastReading);
+        row.insertCell().textContent = perthTime(knots[name].lastReading);
     }
 }
 
-// Shows the newest reading from the last 10 minutes. If there isn't one,
-// shows the most recent reading in all the data instead.
+// shows the newest reading from the last 10 mins, if there isnt one it shows the most recent one we have
 function showLatest(readings) {
     const latestTag = document.getElementById("latestTag");
     const latestDetails = document.getElementById("latestDetails");
@@ -149,7 +140,6 @@ function showLatest(readings) {
         return;
     }
 
-    // Both lists are newest first, so [0] is the latest
     const newReadings = onlyNewReadings(readings);
     let latest = readings[0];
     let label = "No readings in the last " + liveMinutes + " minutes - most recent recorded: ";
@@ -160,5 +150,5 @@ function showLatest(readings) {
 
     latestTag.textContent = label + show(latest.tagName);
     latestDetails.textContent = "RSSI " + show(latest.rssi) + " | " + show(latest.knotName) +
-        " | " + shortTime(latest.advertisedAt);
+        " | " + perthTime(latest.createdAt);
 }
